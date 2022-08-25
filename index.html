@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Injectamos la libreria brain.js y declaramos el set de caracteres a UTF-8 -->
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/brain/0.6.3/brain.js'></script>
+	</head>
+	<body>
+		<!-- Espacio HTML donde se escribiran los  -->
+		<h1>Train results</h1>
+		<div id='check-train'></div>
+
+		<h1>Test results</h1>
+		<div id='check-test'></div>
+
+		<script>
+			/* Declaramos el set de datos de entrenamiento */
+			var train= [
+				{ input: { outlook: 0,temperature: 0.85,humidity: 0.85, windy: 0 }, output: { s: 0 } },
+				{ input: { outlook: 0,temperature: 0.80,humidity: 0.90, windy: 1 }, output: { s: 0 } },
+				{ input: { outlook: 0.5,temperature: 0.83,humidity: 0.86, windy: 0 }, output: { s: 1 } },
+				{ input: { outlook: 1,temperature: 0.70,humidity: 0.96, windy: 0 }, output: { s: 1 } },
+				{ input: { outlook: 1,temperature: 0.68,humidity: 0.80, windy: 0 }, output: { s: 1 } },
+				{ input: { outlook: 1,temperature: 0.65,humidity: 0.70, windy: 1 }, output: { s: 0 } },
+				{ input: { outlook: 0.5,temperature: 0.64,humidity: 0.65, windy: 1 }, output: { s: 1 } },
+				];
+
+			/* Declaramos el set de datos de test, para comprobar como responde la red neuronal entrenada */
+			var test= [
+				{ input: { outlook: 0,temperature: 0.72,humidity: 0.95, windy: 0 }, output: { s: 0 } },
+				{ input: { outlook: 0,temperature: 0.69,humidity: 0.70, windy: 0 }, output: { s: 1 } },
+				{ input: { outlook: 1,temperature: 0.75,humidity: 0.80, windy: 0 }, output: { s: 1 } },
+				{ input: { outlook: 0,temperature: 0.75,humidity: 0.70, windy: 1 }, output: { s: 1 } },
+				{ input: { outlook: 0.5,temperature: 0.72,humidity: 0.90, windy: 1 }, output: { s: 1 } },
+				{ input: { outlook: 0.5,temperature: 0.81,humidity: 0.75, windy: 0 }, output: { s: 1 } },
+				{ input: { outlook: 1,temperature: 0.71,humidity: 0.91, windy: 1 }, output: { s: 0 } }			
+				];
+
+			/* Declaramos la red neuronal */
+			var net = new brain.NeuralNetwork();
+
+			/* Entrenamos la red neuronal con los datos de entrenamiento */
+			net.train( train );
+
+			/* Chequeamos que tal resultados da la red neuronal con los datos de entrenamiento */
+			var checkTrain=checkSet( net,train );
+			document.getElementById("check-train").innerHTML=JSON.stringify( checkTrain );
+
+			/* Chequeamos que tal resultados da la red neuronal con los datos de test */
+			var checkTest=checkSet( net, test );
+			document.getElementById("check-test").innerHTML=JSON.stringify( checkTest );
+
+			/* Esta función ejecuta todo un set de datos sobre la red neuronal y devuelve: número de fallos(loss), número de aciertos(correct), % de aciertos */
+			function checkSet( net, set ) {
+				var ret={ loss: 0, correct: 0, accuracity: 0 };
+				
+				for ( var i=0; i<set.length; i++ ) {
+					var result=net.run( set[i].input );
+
+					if ( result.s>=set[i].output.s-0.25 && result.s<=set[i].output.s+0.25 ) {
+						ret.correct++;
+						} else {
+						ret.loss++;
+						}
+					}
+
+				ret.accuracity=ret.correct*100/set.length;
+
+				return ret;
+				}	
+		</script>
+		<h1>Run</h1>
+		
+        <div class='field'>
+            <p>Outlook</p>
+            <select id='outlook'>
+                <option value='0'>Sunny</option>
+                <option value='0.5'>Overcast</option>
+                <option value='1'>Rainy</option>
+            </select>
+        </div>
+                
+        <div class='field'>
+            <p>Temperatura</p>
+            <input id='temperature' value='0.70' style='width: 60%;'/> ÂºF
+        </div>
+        
+        <div class='field'>
+            <p>Humidity</p>
+            <input id='humidity' value='0.80' style='width: 60%;'/> %
+        </div>
+        
+        <div class='field'>
+            <p>Windy</p>
+            <select id='windy'>
+                <option value='0'>No</option>
+                <option value='1'>Yes</option>
+            </select>
+        </div>
+        
+        <div class='clear'>&nbsp;</div>
+        
+        <p>
+            <button onclick='javascript: testModel();'>Test</button>
+        </p>
+        
+        <p id='test-model'></p>
+        
+        <style>
+            .field {
+                float: left;
+                width: 120px;
+                margin-right: 5px;
+                }
+        
+            .field input, .field select {
+                width: 100%;
+                }
+        
+            .clear {
+                clear: both;
+                overflow: hidden;
+                height: 1px;
+                }
+        </style>
+        
+        <script>
+            /* Esta función se encarga de ejecutar el formulario sobre la red neuronal */
+            function testModel() {
+                var t={
+                    outlook: document.getElementById("outlook").value,
+                    temperature: document.getElementById("temperature").value,
+                    humidity: document.getElementById("humidity").value,
+                    windy: document.getElementById("windy").value
+                    };
+        
+                var result=net.run( t );
+        
+                document.getElementById("test-model").innerHTML=JSON.stringify( result );
+                }			
+        </script>
+	</body>
+</html>
